@@ -1,1 +1,25 @@
-#gitignore
+# Python caches & venv
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Azure Functions
+local.settings.json
+*.azurewebjobs*
+
+# Test outputs
+parsed_data/
+.pytest_cache/
+
+# Environment files
+.env
+
+# IDE/editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
