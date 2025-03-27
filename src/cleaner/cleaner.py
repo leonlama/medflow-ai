@@ -13,8 +13,7 @@ schema_csv = pa.DataFrameSchema({
     "reference_range": pa.Column(str)
 }, coerce=True)
 
-def clean_data(input_path: str, output_path: str):
-    # Auto‑detect format
+def clean_data(input_path: str, output_path: str = None):
     if input_path.lower().endswith(".csv"):
         df = pd.read_csv(input_path)
     else:
@@ -22,12 +21,13 @@ def clean_data(input_path: str, output_path: str):
     if "patient_id" in df.columns:
         df = schema_csv.validate(df)
     df = df.astype(str).drop_duplicates().ffill()
-    df.to_json(output_path, orient="records", date_format="iso")
+    if output_path:
+        df.to_json(output_path, orient="records", date_format="iso")
+    return df
 
 def benchmark_clean(input_path: str, output_path: str):
     start = time.perf_counter()
-    # We don’t need cleaned output here
-    clean_data(input_path, "/dev/null" if hasattr(pd, "__version__") else "")  
+    _ = clean_data(input_path)  # no file write
     elapsed = time.perf_counter() - start
     with open(output_path, "w") as f:
         json.dump({"cpu_time_seconds": elapsed}, f)
