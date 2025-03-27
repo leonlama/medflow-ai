@@ -4,7 +4,7 @@ import axios from 'axios';
 function App() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [dragging, setDragging] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
   const handleUpload = async (file) => {
     if (!file) return;
@@ -32,7 +32,7 @@ function App() {
 
   const handleDrop = (e) => {
     e.preventDefault();
-    setDragging(false);
+    setDragActive(false);
     const file = e.dataTransfer.files[0];
     if (file) handleUpload(file);
   };
@@ -43,67 +43,76 @@ function App() {
   };
 
   return (
-    <div 
-      style={{ 
-        padding: '2rem', 
-        fontFamily: 'sans-serif',
-        border: '2px dashed #ccc',
-        borderRadius: '12px',
-        backgroundColor: dragging ? '#f0f8ff' : '#fff',
-        minHeight: '300px'
-      }}
-      onDragOver={(e) => {
-        e.preventDefault();
-        setDragging(true);
-      }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={handleDrop}
-    >
-      <h1>🧠 MedFlow AI</h1>
-      <p>Drag & drop a <strong>lab report (PDF)</strong> or <strong>audio file (WAV)</strong> here, or click below to browse</p>
-      <input 
-        type="file" 
-        onChange={handleFileSelect}
-        style={{ marginBottom: '1.5rem' }}
-      />
+    <div className="min-h-screen bg-gray-100 p-6">
+      <h1 className="text-2xl font-bold mb-4">🧠 MedFlow AI</h1>
+
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragActive(true);
+        }}
+        onDragLeave={() => setDragActive(false)}
+        onDrop={handleDrop}
+        className={`border-4 border-dashed ${
+          dragActive ? "border-blue-500 bg-blue-100" : "border-gray-400"
+        } p-6 text-center rounded-xl transition-all`}
+      >
+        <p className="mb-2">Drag & drop a <strong>lab report (PDF)</strong> or <strong>audio file (WAV)</strong> here</p>
+        <p className="mb-2 text-sm text-gray-500">or click to select a file</p>
+        <input
+          type="file"
+          className="hidden"
+          id="fileUpload"
+          onChange={handleFileSelect}
+        />
+        <label
+          htmlFor="fileUpload"
+          className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+        >
+          Upload File
+        </label>
+      </div>
+
       {loading && <p>Loading...</p>}
 
       {result && (
-        <div style={{ marginTop: '1.5rem' }}>
+        <div className="mt-6">
           {result.transcript && (
             <div>
-              <h2>🗣 Transcript</h2>
-              <pre>{result.transcript}</pre>
+              <h2 className="text-xl font-semibold mb-2">🗣 Transcript</h2>
+              <pre className="bg-white p-4 rounded shadow">{result.transcript}</pre>
             </div>
           )}
 
           {result.tables && (
             <div>
-              <h2>📄 Extracted Table</h2>
-              <table border="1" cellPadding="8">
-                <thead>
-                  <tr>
-                    {result.tables[0].cells.slice(0, result.tables[0].column_count).map((cell, idx) => (
-                      <th key={idx}>{cell}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.from({ length: result.tables[0].row_count - 1 }).map((_, rowIdx) => (
-                    <tr key={rowIdx}>
-                      {result.tables[0].cells
-                        .slice(result.tables[0].column_count * (rowIdx + 1), result.tables[0].column_count * (rowIdx + 2))
-                        .map((cell, idx) => (
-                          <td key={idx}>{cell}</td>
-                        ))}
+              <h2 className="text-xl font-semibold mb-2">📄 Extracted Table</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white rounded shadow">
+                  <thead>
+                    <tr>
+                      {result.tables[0].cells.slice(0, result.tables[0].column_count).map((cell, idx) => (
+                        <th key={idx} className="border p-2">{cell}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {Array.from({ length: result.tables[0].row_count - 1 }).map((_, rowIdx) => (
+                      <tr key={rowIdx}>
+                        {result.tables[0].cells
+                          .slice(result.tables[0].column_count * (rowIdx + 1), result.tables[0].column_count * (rowIdx + 2))
+                          .map((cell, idx) => (
+                            <td key={idx} className="border p-2">{cell}</td>
+                          ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
-          {result.error && <p style={{ color: "red" }}>❌ {result.error}</p>}
+          {result.error && <p className="text-red-500">❌ {result.error}</p>}
         </div>
       )}
     </div>
