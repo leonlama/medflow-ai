@@ -1,0 +1,45 @@
+/* Add some spacing around the entire page */
+.page-container {
+  max-width: 800px; /* Centered, narrower content area */
+  margin: 0 auto; 
+  padding: 1rem;
+  font-family: Arial, sans-serif;
+}
+
+/* Each block as a “card” */
+.block-card {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem; /* Space between cards */
+  background-color: #fafafa;
+}
+
+/* Headings slightly bigger */
+.block-card h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+/* Tidy up the file input and the JSON display */
+.block-card input[type="file"] {
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.block-card pre {
+  background: #fff;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow-x: auto; /* Horizontal scroll if needed */
+}
+
+/* A bit of style for the transcript quote */
+.block-card blockquote {
+  margin: 0.75rem 0;
+  padding: 0.5rem;
+  border-left: 4px solid #007bff;
+  background: #eef3ff;
+}
