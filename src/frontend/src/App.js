@@ -1,23 +1,29 @@
-import React, { useState } from "react";
-import "./App.css";
+import React, { useState } from 'react';
+import axios from 'axios';
+import DataTable from './DataTable';
 
 function App() {
-  const [selectedFile, setSelectedFile] = useState("");
+  const [rows, setRows] = useState([]);
 
-  const handleUpload = (e) => {
+  const handleUpload = async (e) => {
     const file = e.target.files[0];
-    setSelectedFile(file ? file.name : "");
+    if (!file) return;
+
+    // Call Azure Function with hardcoded path
+    const { data } = await axios.post(
+      "http://localhost:7071/api/CleanData",
+      { input_path: "sample_data/test_lab_report.pdf" }
+    );
+
+    // Set the cleaned data into state
+    setRows(data);
   };
 
   return (
-    <div className="page-container">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="block-card">
-          <h2>MedFlow AI Demo</h2>
-          <input type="file" onChange={handleUpload} />
-          <p>{selectedFile || "No file selected"}</p>
-        </div>
-      ))}
+    <div style={{ margin: '2rem' }}>
+      <h1>MedFlow AI Demo</h1>
+      <input type="file" onChange={handleUpload} />
+      <DataTable rows={rows} />
     </div>
   );
 }

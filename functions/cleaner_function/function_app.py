@@ -1,23 +1,41 @@
-import os, sys, logging, json
+import os, sys, logging, traceback, json
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 import azure.functions as func
 import azure.cognitiveservices.speech as speechsdk
 from src.cleaner.cleaner import clean_data
 
+from src.parser.extract import extract_tables, extract_csv 
+
 app = func.FunctionApp()
 
 @app.function_name(name="CleanData")
 @app.route(route="CleanData", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
 def clean_data_func(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info("CleanData HTTP trigger received")
     try:
         body = req.get_json()
-        df = clean_data(body.get("input_path"))
+        base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        input_path = os.path.normpath(os.path.join(base, body.get("input_path")))
+
+        # Determine intermediate JSON path
+        parsed_dir = os.path.join(base, "parsed_data")
+        os.makedirs(parsed_dir, exist_ok=True)
+        json_path = os.path.join(parsed_dir, os.path.basename(input_path).rsplit(".", 1)[0] + ".json")
+
+        if input_path.lower().endswith(".pdf"):
+            extract_tables(input_path, json_path)
+        elif input_path.lower().endswith(".csv"):
+            extract_csv(input_path, json_path)
+        else:
+            return func.HttpResponse("Unsupported file type", status_code=400)
+
+        df = clean_data(json_path)
         return func.HttpResponse(df.to_json(orient="records"), mimetype="application/json")
+
     except Exception as e:
-        logging.error(f"Cleaning failed: {e}")
-        return func.HttpResponse(str(e), status_code=500)
+        tb = traceback.format_exc()
+        logging.error(tb)
+        return func.HttpResponse(f"ERROR: {e}\n\n{tb}", status_code=500)
 
 @app.function_name(name="TranscribeAudio") 
 @app.route(route="TranscribeAudio", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
