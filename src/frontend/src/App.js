@@ -4,9 +4,9 @@ import axios from 'axios';
 function App() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [dragging, setDragging] = useState(false);
 
-  const handleUpload = async (e) => {
-    const file = e.target.files[0];
+  const handleUpload = async (file) => {
     if (!file) return;
 
     const formData = new FormData();
@@ -30,11 +30,42 @@ function App() {
     }
   };
 
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleUpload(file);
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) handleUpload(file);
+  };
+
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+    <div 
+      style={{ 
+        padding: '2rem', 
+        fontFamily: 'sans-serif',
+        border: '2px dashed #ccc',
+        borderRadius: '12px',
+        backgroundColor: dragging ? '#f0f8ff' : '#fff',
+        minHeight: '300px'
+      }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={handleDrop}
+    >
       <h1>🧠 MedFlow AI</h1>
-      <p>Upload a <strong>lab report (PDF)</strong> or <strong>audio file (WAV)</strong> to extract information.</p>
-      <input type="file" onChange={handleUpload} />
+      <p>Drag & drop a <strong>lab report (PDF)</strong> or <strong>audio file (WAV)</strong> here, or click below to browse</p>
+      <input 
+        type="file" 
+        onChange={handleFileSelect}
+        style={{ marginBottom: '1.5rem' }}
+      />
       {loading && <p>Loading...</p>}
 
       {result && (
