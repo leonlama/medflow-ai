@@ -9,9 +9,9 @@ function App() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Call Azure Function with hardcoded path
+    // Call Azure Function
     const { data } = await axios.post(
-      "http://localhost:7071/api/CleanData",
+      "/api/CleanData",
       { input_path: "sample_data/test_lab_report.pdf" }
     );
 
