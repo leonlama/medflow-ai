@@ -1,18 +1,40 @@
-import os, sys, logging, traceback, json, io, tempfile
-from datetime import datetime
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+import sys
+import os
+import sys
+from pathlib import Path
 
-import openai
-import jsonschema
-import tiktoken
+backend_path = Path(__file__).resolve().parents[2] / "backend"
+import logging
+
+if str(backend_path) not in sys.path:
+    sys.path.insert(0, str(backend_path))
+    logging.info(f"[DEBUG] Inserted backend path: {backend_path}")
+
+logging.info(f"[DEBUG] PYTHONPATH = {os.environ.get('PYTHONPATH')}")
+
+from pathlib import Path
+import logging
+import traceback
+import json
+import io
+import tempfile
+from datetime import datetime
 
 import azure.functions as func
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
-#from azure.ai.inference import ChatCompletionsClient
 import azure.cognitiveservices.speech as speechsdk
 from openai import AzureOpenAI
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+
+from backend.api.transcription import transcribe_audio
+from backend.api.summarization import summarize_text
+from backend.shared.form_cleaner import clean_form_data
+from backend.utils.validation import (
+    validate_medical_data,
+    remove_empty_elements,
+    MedicalJSONEncoder
+)
 
 # Define schema for medical data validation
 MEDICAL_SCHEMA = {
@@ -69,11 +91,16 @@ class MedicalJSONEncoder(json.JSONEncoder):
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-@app.function_name(name="CleanData")
+@app.function_name(name="CleanReport")
 @app.route(route="clean", methods=["POST"])
 def clean_data_func(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info("[DEBUG] CLEAN endpoint hit")
+    logging.info(f"[DEBUG] Method: {req.method}")
+    logging.info(f"[DEBUG] Headers: {req.headers}")
+    logging.info(f"[DEBUG] Files: {req.files}")
+    logging.info(f"[DEBUG] Params: {req.params}")
     try:
-        file = req.files.get('file')
+        file = req.files.get('pdf')
         if not file:
             return func.HttpResponse("No file uploaded", status_code=400)
 
@@ -111,7 +138,7 @@ def clean_data_func(req: func.HttpRequest) -> func.HttpResponse:
 def transcribe_audio(req: func.HttpRequest) -> func.HttpResponse:
     try:
         # Get raw audio bytes from request body
-        audio_bytes = req.get_body()
+        audio_bytes = req.get_body() #check if allows .mp3 aswell. 
         
         if not audio_bytes:
             return func.HttpResponse("No audio data received", status_code=400)
@@ -149,12 +176,12 @@ def transcribe_audio(req: func.HttpRequest) -> func.HttpResponse:
         logging.error(f"TranscribeAudio Error: {str(e)}")
         return func.HttpResponse(f"ERROR: {str(e)}", status_code=500)
 
-@app.function_name(name="SummarizeReport")
+@app.function_name(name="Summarize")
 @app.route(route="summarize", methods=["POST"])
 def summarize_report(req: func.HttpRequest) -> func.HttpResponse:
     try:
         # decode JSON data
-        body_bytes = req.get_body()
+        body_bytes = req.get_body() #check if /summarize expects json. change to "str" if better token usage.
         try:
             decoded_body = body_bytes.decode('utf-8')
         except UnicodeDecodeError:

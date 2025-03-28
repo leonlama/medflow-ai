@@ -23,3 +23,6 @@ parsed_data/
 # OS
 .DS_Store
 Thumbs.db
+
+repo-structure.txt
+clean_tree.txt
