@@ -91,9 +91,14 @@ class MedicalJSONEncoder(json.JSONEncoder):
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-@app.function_name(name="CleanData")
+@app.function_name(name="CleanReport")
 @app.route(route="clean", methods=["POST"])
 def clean_data_func(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info("[DEBUG] CLEAN endpoint hit")
+    logging.info(f"[DEBUG] Method: {req.method}")
+    logging.info(f"[DEBUG] Headers: {req.headers}")
+    logging.info(f"[DEBUG] Files: {req.files}")
+    logging.info(f"[DEBUG] Params: {req.params}")
     try:
         file = req.files.get('file')
         if not file:
@@ -171,7 +176,7 @@ def transcribe_audio(req: func.HttpRequest) -> func.HttpResponse:
         logging.error(f"TranscribeAudio Error: {str(e)}")
         return func.HttpResponse(f"ERROR: {str(e)}", status_code=500)
 
-@app.function_name(name="SummarizeReport")
+@app.function_name(name="Summarize")
 @app.route(route="summarize", methods=["POST"])
 def summarize_report(req: func.HttpRequest) -> func.HttpResponse:
     try:
