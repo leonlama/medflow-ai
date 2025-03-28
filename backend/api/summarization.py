@@ -69,7 +69,7 @@ def summarize_text(transcript: str) -> dict:
         model="gpt-4o",
         messages=messages,
         response_format={"type": "json_object"},
-        max_tokens=800,
+        max_tokens=300,
         temperature=0.3
     )
 
