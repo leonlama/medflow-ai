@@ -100,7 +100,7 @@ def clean_data_func(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f"[DEBUG] Files: {req.files}")
     logging.info(f"[DEBUG] Params: {req.params}")
     try:
-        file = req.files.get('file')
+        file = req.files.get('file') #might change to specific file type (e.g.`pdf`).
         if not file:
             return func.HttpResponse("No file uploaded", status_code=400)
 
@@ -138,7 +138,7 @@ def clean_data_func(req: func.HttpRequest) -> func.HttpResponse:
 def transcribe_audio(req: func.HttpRequest) -> func.HttpResponse:
     try:
         # Get raw audio bytes from request body
-        audio_bytes = req.get_body()
+        audio_bytes = req.get_body() #check if allows .mp3 aswell. 
         
         if not audio_bytes:
             return func.HttpResponse("No audio data received", status_code=400)
@@ -181,7 +181,7 @@ def transcribe_audio(req: func.HttpRequest) -> func.HttpResponse:
 def summarize_report(req: func.HttpRequest) -> func.HttpResponse:
     try:
         # decode JSON data
-        body_bytes = req.get_body()
+        body_bytes = req.get_body() #check if /summarize expects json. change to "str" if better token usage.
         try:
             decoded_body = body_bytes.decode('utf-8')
         except UnicodeDecodeError:
