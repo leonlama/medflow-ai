@@ -4,7 +4,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 import azure.functions as func
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
+#from azure.ai.inference import ChatCompletionsClient
 import azure.cognitiveservices.speech as speechsdk
+from openai import AzureOpenAI
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
@@ -104,3 +106,44 @@ def transcribe_audio(req: func.HttpRequest) -> func.HttpResponse:
                 except Exception as e:
                     logging.warning(f"Unexpected error while deleting temp file: {e}")
                     break
+
+@app.function_name(name="SummarizeReport")
+@app.route(route="summarize", methods=["POST"])
+def summarize_report(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        # decode JSON data
+        body_bytes = req.get_body()
+        try:
+            decoded_body = body_bytes.decode('utf-8')
+        except UnicodeDecodeError:
+            decoded_body = body_bytes.decode('latin-1')  # Fallback für Latin-1
+        transcript = json.loads(decoded_body).get('text')
+
+        if not transcript:
+            return func.HttpResponse("No text provided", status_code=400)
+
+        # Azure OpenAI Client initialize
+        client = AzureOpenAI(
+            api_key=os.getenv("AZURE_OPENAI_KEY"),
+            api_version="2024-02-01",
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
+        )
+
+        # generate summary
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "Fasse den medizinischen Bericht als JSON zusammen: {patient_id, date, status: {pain_level, mobility}, treatment: {medication, frequency}}"},
+                {"role": "user", "content": transcript}
+            ],
+            max_tokens=500
+        )
+
+        return func.HttpResponse(
+            json.dumps({"summary": response.choices[0].message.content}),
+            mimetype="application/json"
+        )
+
+    except Exception as e:
+        logging.error(f"Error: {str(e)}")
+        return func.HttpResponse(f"ERROR: {str(e)}", status_code=500)
