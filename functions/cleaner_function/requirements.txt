@@ -4,3 +4,5 @@ azure-ai-formrecognizer>=3.3.0
 azure-openai==1.0.0
 python-dotenv==1.0.0
 openai>=1.12.0
+jsonschema
+tiktoken
