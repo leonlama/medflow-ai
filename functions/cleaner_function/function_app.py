@@ -1,20 +1,38 @@
-import os, sys, logging, traceback, json, io, tempfile
-from datetime import datetime
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+import sys
+import os
+import sys
+from pathlib import Path
 
-import openai
-import tiktoken
+backend_path = Path(__file__).resolve().parents[2] / "backend"
+import logging
+
+if str(backend_path) not in sys.path:
+    sys.path.insert(0, str(backend_path))
+    logging.info(f"[DEBUG] Inserted backend path: {backend_path}")
+
+logging.info(f"[DEBUG] PYTHONPATH = {os.environ.get('PYTHONPATH')}")
+
+from pathlib import Path
+import logging
+import traceback
+import json
+import io
+import tempfile
+from datetime import datetime
 
 import azure.functions as func
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
-#from azure.ai.inference import ChatCompletionsClient
 import azure.cognitiveservices.speech as speechsdk
 from openai import AzureOpenAI
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+
+from backend.api.transcription import transcribe_audio
+from backend.api.summarization import summarize_report
+from backend.api.form_cleaner import clean_form_data
 from backend.utils.validation import (
     validate_medical_data,
-    remove_empty_elements, 
+    remove_empty_elements,
     MedicalJSONEncoder
 )
 
