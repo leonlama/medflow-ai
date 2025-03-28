@@ -3,7 +3,6 @@ from datetime import datetime
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 import openai
-import jsonschema
 import tiktoken
 
 import azure.functions as func
@@ -13,6 +12,11 @@ from azure.core.credentials import AzureKeyCredential
 import azure.cognitiveservices.speech as speechsdk
 from openai import AzureOpenAI
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+from backend.utils.validation import (
+    validate_medical_data,
+    remove_empty_elements, 
+    MedicalJSONEncoder
+)
 
 # Define schema for medical data validation
 MEDICAL_SCHEMA = {
