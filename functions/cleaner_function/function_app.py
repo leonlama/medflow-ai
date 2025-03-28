@@ -28,7 +28,7 @@ from openai import AzureOpenAI
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 from backend.api.transcription import transcribe_audio
-from backend.api.summarization import summarize_report
+from backend.api.summarization import summarize_text
 from backend.api.form_cleaner import clean_form_data
 from backend.utils.validation import (
     validate_medical_data,
