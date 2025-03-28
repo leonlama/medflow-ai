@@ -100,7 +100,7 @@ def clean_data_func(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f"[DEBUG] Files: {req.files}")
     logging.info(f"[DEBUG] Params: {req.params}")
     try:
-        file = req.files.get('file') #might change to specific file type (e.g.`pdf`).
+        file = req.files.get('pdf')
         if not file:
             return func.HttpResponse("No file uploaded", status_code=400)
 
